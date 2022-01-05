@@ -8,3 +8,7 @@
 *.pyc
 
 # ignore *.csv we are using feather instead
+*.csv
+
+#ignore all .pdf files
+*.pdf
