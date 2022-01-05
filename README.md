@@ -14,3 +14,6 @@ splitting data
 
 opening files
 - https://neptune.ai/blog/google-colab-dealing-with-files
+
+csv to feather
+- https://towardsdatascience.com/stop-using-csvs-for-storage-this-file-format-is-150-times-faster-158bd322074e
