@@ -1,0 +1,9 @@
+# ignore all .swo files
+*.swo
+
+# ignore all .swp files
+*.swp
+
+# ignore __pycache__
+*.pyc
+
