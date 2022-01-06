@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import nltk
 import feather
@@ -33,11 +34,29 @@ articles = X_train.values.tolist()
 # number of articles containing one word from vocab. That is why it's a set
 frequencies = collections.Counter(word for art in articles for word in set(art))  # this is better
 vocabulary = frequencies.keys()
-#vocabulary = set(word for sent in articles for word in sent)  # takes 2 min
 word2index = {word: e for e, word in enumerate(vocabulary)}
 
 total_articles = X_train.shape[0]
-num_words = len(list(vocabulary)) #  needed, yes for TF
+
+def TF(art, word):  # term_frequency
+    return len([w for w in art if w == word])/len(art)
+
+def IDF(word):  # inverse_document_freq
+    if frequencies[word]:
+        counter = frequencies[word] + 1
+    else:
+        counter = 1
+    return np.log(total_articles/counter)
+
+def TF_IDF(article):
+    tf_idf_vec = np.zeros((len(vocabulary),))
+    for word in article:
+        tf_idf_vec[word2index[word]] = TF(article, word) * IDF(word)
+    return tf_idf_vec
+
+tf_idf_vectors = [tf_idf_vectors(art) for art in articles]
+
+print(tf_idf_vectors[0])
 # https://www.askpython.com/python/examples/tf-idf-model-from-scratch
 # https://towardsdatascience.com/tf-idf-for-document-ranking-from-scratch-in-python-on-real-world-dataset-796d339a4089
 # https://www.youtube.com/watch?v=vZAXpvHhQow
