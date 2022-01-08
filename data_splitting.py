@@ -8,10 +8,10 @@ from keras.preprocessing.text import text_to_word_sequence
 from nltk.tokenize import word_tokenize # if possible, otherwise .split()
 
 # convert to feather for faster processing and less space usage
-#fake = pd.read_csv("Fake.csv",usecols=["text"]) # extracting only article texts
-#true = pd.read_csv("True.csv",usecols=["text"])
-#fake.to_feather("Fake_News.feather")
-#true.to_feather("Factual_News.feather")
+fake = pd.read_csv("Fake.csv",usecols=["text"]) # extracting only article texts
+true = pd.read_csv("True.csv",usecols=["text"])
+fake.to_feather("Fake_News.feather")
+true.to_feather("Factual_News.feather")
 
 fake = pd.read_feather("Fake_News.feather")
 true = pd.read_feather("Factual_News.feather")
