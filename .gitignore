@@ -15,3 +15,9 @@
 
 # ignore all .feather files
 *.feather
+
+# ignore all .txt files
+*.txt
+
+# ignore funky data splitting
+data_splitting.py

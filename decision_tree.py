@@ -28,13 +28,7 @@ def entropy(x):
         x_prob = x.value_counts() / x.shape[0]  # vector size
         return np.sum(-x_prob*np.log2(x_prob))  # entropy 
         #return np.sum(-x_prob*np.log2(x_prob+1e-9))  # entropy 
-# information gain for classification
 
-#https://www.section.io/engineering-education/entropy-information-gain-machine-learning/
-
-# y --> target
-
-#https://www.youtube.com/watch?v=sgQAhG5Q7iY
 #TODO: x, y, GOTTA FIX THIS. Should be happening with x_Train, and y_Train
 def information_gain_classification(x, total_set):  # information gain better with entropy than gini
 
@@ -45,8 +39,3 @@ def information_gain_classification(x, total_set):  # information gain better wi
     """
     entropy(total_set) - np.sum(x/total_set * entropy(x))
 
-# entropy --> https://www.youtube.com/watch?v=y6VwIcZAUkI
-
-
-# https://anderfernandez.com/en/blog/code-decision-tree-python-from-scratch/
-# good comments on how DT work under the drop Index cell
