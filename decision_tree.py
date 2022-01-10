@@ -6,6 +6,7 @@ data = pd.read_csv("data.csv")
 data["obese"] = (data.Index >= 4).astype("int")
 data.drop("Index", axis=1, inplace = True)
 print(data.head())
+print(data.columns)
 
 
 # cost functions gin index  vs entropy 
@@ -34,15 +35,14 @@ def entropy(x):
 # y --> target
 
 #https://www.youtube.com/watch?v=sgQAhG5Q7iY
-def information_gain_classification(y, mask, func):  # information gain better with entropy than gini
+#TODO: x, y, GOTTA FIX THIS. Should be happening with x_Train, and y_Train
+def information_gain_classification(x, total_set):  # information gain better with entropy than gini
 
     """
     information gain of a loss function
     y --> target
     mask --> split choice
     """
-    a = sum(mask)
-    b = 
     entropy(total_set) - np.sum(x/total_set * entropy(x))
 
 # entropy --> https://www.youtube.com/watch?v=y6VwIcZAUkI
