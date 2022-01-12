@@ -1,6 +1,8 @@
 # Dataset
 https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset
 
+The data set was merged. We concanated the data and shuffled it to avoid biases.
+
 
 decision tree
 
