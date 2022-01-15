@@ -1,123 +1,135 @@
-import pandas as pd
-import numpy as np
+# %%
+from data_preprocessing import *
+from sklearn.model_selection import train_test_split
 
-data = pd.read_csv("data.csv")
-#data = pd.read_csv("vectors.csv", skipfooter=2000000, engine="python"))
-data["obese"] = (data.Index >= 4).astype("int")
-data.drop("Index", axis=1, inplace = True)
-print(data.head())
-print(data.columns)
+X_train, X_test, Y_train, Y_test = train_test_split(data[:, :-1], data[:, -1], train_size=0.8, test_size=0.2)
+X_train, X_valid, Y_train, Y_valid = train_test_split(data[:, :-1], data[:, -1], train_size=0.8, test_size=0.2)
+
+class TreeNode:
+
+    def __init__(self, feature=None, threshold=None, right_node=None, left_node=None, min_info_gain=None):  # feature_index
+        """
+        Initializing a decision node and leaf node
+        """
+        self.feature = feature
+        self.threshold = threshold
+        self.righ_node = right_node
+        self.left_node = left_node
+        self.min_info_gain = min_info_gain
+        # threshold is important for splitting in the decision tree itself
+
+        # value is the majority class for the leaf node. To determin the class of a datapoint
+        # if a decision has been made
+        self.value = value
+
+    @property
+    def leafNode(self):
+        return self.value
+
+    @leafNode.setter
+    def leafNode(self, value):
+        if value:
+            self.value = value
 
 
-# cost functions gin index  vs entropy 
+class DecisionTreeClassifier:
 
-def gini_index(x):  # 0 to 0.5
-    """
-    criterion for calculating IG. IG is used with decision trees to split a
-    node because we measure the impurity of a node. If a node has multiple
-    classes then it's impure. A one class node is pure.
-    loss function: 1 - sigma(prob_data)**2
-    """
-    if isinstance(x, pd.Series):
-        x_prob = x.value_counts() / x.shape[0]  # counting each class per node split
-    return 1 - np.sum(x_prob**2)  # weighted gini index is for a particular split. I.e. gini index * (values of one side / divide by total between 2 sides)
-# if one side has only one of the y targets, then the gini index would be 0. Having both is important. Here we see an actual data distribution
-# the high gin index will be selected as the tree splitting criterion. Higher dependence, a balanced prob distribution
-def entropy(data):  # feed the vectors to this. 0 to 1
-    """
-    loss function: sigma(-x_prob * log2(x_prob))
-    logs of base 2 as per usual, but if using euler then we refer to the result as nats
-    Shannon information --> self-information. -log p(x). Ensuring that the result is always
-    negative or zero. If there is no surprise, certainty --> prob then 1 and thus low info
-    information is in bits
+    def __init__(self, max_depth=None, min_sample_split=None):  # max depth and minimum sample split. If number  of samples becomes less than min samples, we won't split any
+        # further. This node will turn into a leaf node. When the tree reaches max depth we won't split any further either. These 2 variables can be == 2
+        self.root = None
+        self.max_depth = max_depth
+        self.min_sample_split = min_sample_split
+        self.features = None
 
-    entropy for random variables and this is an example of Shannon information.
-    The intuition for entropy is that it is the average number of bits required
-    to represent or transmit an event drawn from the probability distribution for the random variable.
 
-    Entropy for a random variable X with k in K discrete states turns into
-    -sigma(each prob(k) in K set * the log of a prob of an event k
+    def fit(self, x_train, y_train):
+        #self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1]) num_features
+        
+        self.root = self.branchBuilder(x_train, y_train, curr_depth=0)  # init as zero
 
-    lowest entropy for a random k variable is with probs == 1, certain.
-    largest entropy is if all events are equally likely. An example of this is
-    the shannon information from rolling a die vs the entropy of rolling a die
 
-    This follows through with probability distributions
+    def predict(self, x_train, y_train):
+        pass
 
-    Skewed Probability Distribution (unsurprising): Low entropy.
-    Balanced Probability Distribution (surprising): High entropy.
-    """
-    if isinstance(dataset, pd.Series):  # scipy defaults to e
-        # value_counts with bins in it can force a continuous variable into
-        # a discrete one
+    def branchBuilder(self, x, y, curr_depth):  # init as zero
+        samples = x.shape[0]
+        features = x.size
+        print(x[0][0].shape)
+        #print(features)
+        
+        raise SystemExit
+
+        if curr_depth > self.max_depth:
+            y = y.tolist()
+            max_value = max(y, key=y.count)
+            leaf_node = TreeNode()
+            leaf_node.value = max_value
+            return TreeNode(leaf_node)
+
+
+        if curr_samples >= self.min_sample_split and curr_depth <= self.max_depth:
+            self.tree_split = self.HyperSplit()
+            if self.IG > 0:
+                left_branch = self.branchBuilder(x, y, threshold, xxxx, currdepth + 1)
+                right_branch = self.branchBuilder
+                decision_node =help
+                TreeNode(decision_node)  # mess of values to pass or attributes?
+
+            if self.IG == 0:
+                print("Pure node, each side corresponds to one class. No further splitting needed")
+
+    def nodeSplit(self, data, feature_index, split_threshold):
+        # MAY NOT need feature_index
+        left_node = np.argwhere(data <= splithreshold).flatten()  # find indexes turn 1d
+        right_node = np.array([row for row in data if row[feature_index] > threshold])
+        return left_node, right_node
+        # https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
+
+    def HyperSplit(self, data):
+         what
+
+
+    def giniIndex(x):  # 0 to 0.5
+        """
+        criterion for calculating IG. IG is used with decision trees to split a
+        node because we measure the impurity of a node. If a node has multiple
+        classes then it's impure. A one class node is pure.
+        loss function: 1 - sigma(prob_data)**2
+        """
+        if isinstance(x, pd.Series):
+            x_prob = x.value_counts() / x.shape[0]  # counting each class per node split
+        return 1 - np.sum(x_prob**2)  # weighted gini index is for a particular split. I.e. gini index * (values of one side / divide by total between 2 sides)
+
+
+
+
+    def Entropy(data):  # feed the vectors to this. 0 to 1. only x?
+        """
+        Balanced Probability Distribution (surprising): High entropy.
+        """
         dataset_prob = dataset.value_counts() / dataset.shape[0]  # vector size, value_counts --> node?
         return np.sum(-dataset_prob*np.log2(dataset_prob))  # entropy, this is fine
-        #return np.sum(-dataset_prob*np.log2(dataset_prob+1e-9))  # entropy 
+            #return np.sum(-dataset_prob*np.log2(dataset_prob+1e-9))  # entropy 
 
 #In this way, entropy can be used as a calculation of the purity of a dataset, e.g.
-#how balanced the distribution of classes happens to be.
-# IG provides a way to use entropy to calculate how changes in the dataset impact its purity
-# this is the distribution of classes. Less surprise means more purity and that is smaller entropy
 
-#TODO: x, y, GOTTA FIX THIS. Should be happening with x_Train, and y_Train
-def information_gain_classification(x, y):  # information gain better with entropy than gini. x and y may be the nodes instead
-    # child vs parent nodes
-    """
-    information gain of a loss function
-    y --> target
-    mask --> split choice
-    computes the reduction in entropy or surprise from transforming a dataset
-    a certain way. Evaluates the IG for each variable and chooses the variable that maximizes
-    the information gain, thus minimizing the entropy, and 'best splits the dataset into groups
-    for effective classification
 
-    it can also be mutual information, which is a feature selection method. The gain of each variable
-    is evaluated within the context of the target variable
 
-    The first use is more common in the training of decision trees. IG is computed by comparing
-    entropy of the dataset before and after transformation
-
-    Mutual information calculates the statistical dependence between two variables and is the 
-    name given to information gain when applied to variable selection.
-
-    large IG means lower entropy
-    """
-    entropy(y) - np.sum(x/y * entropy(x))  # this is probably wrong, but this is
-    # IG(S, a) = H(S) - H(S|a), the second part is the cond probability
+    def InformationGainClassification(left_child, right_child, parent, func):  # information gain is used with entropy. If it's used with the gini index, it's called something else
+        # child vs parent nodes
+        """
+        information gain of a loss function
+        y --> target
+        mask --> split choice
+        large IG means lower entropy
+        """
+        left_inf_comp = left_child.size / parent.size * func(l_child)
+        right_inf_comp = right_child.size / parent.size * func(r_child)
+        return func(parent) - (left_inf_comp + right_inf_comp)  # weighted values of features
+    # for regression
+    #y.var() - np.sum(x.abs() / y.abs() * x.var())
+    # IG(S, a) = H(S) - H(S|a), the second part is the cond probability. Parent node - comb entropy of childnodes
     # mutual information I(X;Y) = H(X) - H(X|Y) this is mutual dependence
-    # mutual information can also be seen as the Kullback-Leibler or KL. If the calculated result
-    # is 0 the variables are independent. High results indicate higher dependence. Often used as a 
-    # general form of a correlation coefficient. This is a measure of dependence between random
-    # variables
-    # this is why we see it in ICA to see whether components are statistically
-    # independent
-    # Effect of Transforms to a Dataset (decision trees): Information Gain.
-    # Dependence Between Variables (feature selection): Mutual Information.
 
-# https://machinelearningmastery.com/information-gain-and-mutual-information/ to read exmples 
-# as to why IG in decision trees. The ID3 algorithm is used to build a decision tree
-# The information gain is calculated for each variable in the dataset. The variable that has
-# the largest information gain is selected to split the dataset. Generally, a larger gain
-# indicates a smaller entropy or less surprise.
-# https://www.amazon.com/Learning-McGraw-Hill-International-Editions-Computer/dp/0071154671/ref=as_li_ss_tl?keywords=machine+learning&qid=1563151324&s=books&sr=1-44&linkCode=sl1&tag=inspiredalgor-20&linkId=5488f209b18fb6b8ad8ce7f72d1c3ac5&language=en_US
-
-# Information gain is the entropy of parent node minus sum of weighted entropies of all child nodes
-# https://thatascience.com/learn-machine-learning/gini-entropy/
-
-
-def infogain(parent, children, criterion):
-    score = {'gini': giniscore, 'entropy': entropyscore}
-    metric = score[criterion]
-    parentscore = metric(parent)
-    parentsum = sum(parent.values())
-    weighted_child_score = sum([metric(i)*sum(i.values())/parentsum  for i in children])
-    gain = round((parentscore - weighted_child_score),2)
-    print('Information gain: {}'.format(gain))
-    return gain
-
-# https://machinelearningmastery.com/what-is-information-entropy/
-# 
-
-
-# checking purity of dataset using gini index https://ekamperi.github.io/machine%20learning/2021/04/13/gini-index-vs-entropy-decision-trees.html
-
+myTree = DecisionTreeClassifier(2, 2)
+myTree.fit(X_train, Y_train)
