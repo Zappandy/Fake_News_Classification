@@ -35,19 +35,23 @@ class TF_IDF:
         #return np.log(total_articles/word_in_text)
     
     def article_tf_idf(self, article):
-        tf_idf_vec = np.zeros((max_len,))  # padding the vector to reach 8375
+        tf_idf_vec = np.zeros((1, max_len))  # padding the vector to reach 8375
         art_length = len(article)
         for i, word in enumerate(article):
-            tf_idf_vec[i] = self.TF(article, word) * self.IDF(word)
+            tf_idf_vec[0, i] = self.TF(article, word) * self.IDF(word)
         return tf_idf_vec
     
 compute_tf_idf = TF_IDF()
 
-
 test_articles.loc[:, "text"] = test_articles.apply(lambda row: compute_tf_idf.article_tf_idf(row["text"]), axis=1)
-
-
 # relevant for decision trees to split data
 y_data = np.resize(test_articles["label"].to_numpy(), (total_articles, 1))
-x_data = np.resize(test_articles["text"].to_numpy(), (total_articles, max_len))
+x_data = np.vstack(tuple(test_articles["text"].iloc[i] for i in range(total_articles)))  # generator use has been deprecated
+#print(test_articles["text"].iloc[0][0, :3])
+#print(x_data[0, :3])
 data = np.concatenate((x_data, y_data), axis=1)
+#print(data[0, :3])
+#print(data.shape)
+
+X_train, X_test, Y_train, Y_test = train_test_split(data[:, :-1], data[:, -1], train_size=0.8, test_size=0.2)
+X_train, X_valid, Y_train, Y_valid = train_test_split(data[:, :-1], data[:, -1], train_size=0.7, test_size=0.3)

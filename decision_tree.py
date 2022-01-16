@@ -2,8 +2,6 @@
 from data_preprocessing import *
 from sklearn.model_selection import train_test_split
 
-X_train, X_test, Y_train, Y_test = train_test_split(data[:, :-1], data[:, -1], train_size=0.8, test_size=0.2)
-X_train, X_valid, Y_train, Y_valid = train_test_split(data[:, :-1], data[:, -1], train_size=0.8, test_size=0.2)
 
 class TreeNode:
 
@@ -44,33 +42,29 @@ class DecisionTreeClassifier:
 
     def fit(self, x_train, y_train):
         #self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1]) num_features
-        
-        self.root = self.branchBuilder(x_train, y_train, curr_depth=0)  # init as zero
+        y_train = np.resize(y_train, (y_train.shape[0], 1))
+        data = np.concatenate((x_train, y_train), axis=1)  # concatenating training data to grow tree and split node data that includes the labels
+        self.root = self.branchBuilder(data, curr_depth=0)  # init as zero
 
 
     def predict(self, x_train, y_train):
         pass
 
-    def branchBuilder(self, x, y, curr_depth):  # init as zero
-        samples = x.shape[0]
-        features = x.size
-        print(x[0][0].shape)
-        #print(features)
-        
-        raise SystemExit
-
-        if curr_depth > self.max_depth:
-            y = y.tolist()
-            max_value = max(y, key=y.count)
+    def branchBuilder(self, data, curr_depth):  # init as zero
+        x = data[:, :-1]
+        y = data[:, -1]
+        samples, features = x.shape
+        if curr_depth > self.max_depth or samples < self.min_sample_split:
             leaf_node = TreeNode()
-            leaf_node.value = max_value
+            #y = y.tolist()
+            #leaf_node.value = max(y, key=y.count)  # returns mode
+            leaf_node.value = np.argmax(np.bincount(y))  # faster, no need to cast
             return TreeNode(leaf_node)
 
-
-        if curr_samples >= self.min_sample_split and curr_depth <= self.max_depth:
-            self.tree_split = self.HyperSplit()
+        elif samples >= self.min_sample_split and curr_depth <= self.max_depth:
+            self.tree_split = self.HyperSplit(x, y, samples, features)
             if self.IG > 0:
-                left_branch = self.branchBuilder(x, y, threshold, xxxx, currdepth + 1)
+                left_branch = self.branchBuilder(x, y, threshold, currdepth + 1)
                 right_branch = self.branchBuilder
                 decision_node =help
                 TreeNode(decision_node)  # mess of values to pass or attributes?
@@ -79,14 +73,25 @@ class DecisionTreeClassifier:
                 print("Pure node, each side corresponds to one class. No further splitting needed")
 
     def nodeSplit(self, data, feature_index, split_threshold):
-        # MAY NOT need feature_index
-        left_node = np.argwhere(data <= splithreshold).flatten()  # find indexes turn 1d
-        right_node = np.array([row for row in data if row[feature_index] > threshold])
+        # MAY NOT need feature_index, it's the col index
+        left_node = np.argwhere(data <= split_threshold).flatten()  # find indexes turn 1d
+        right_node = np.argwhere(data > split_threshold).flatten()  # find indexes turn 1d
+        #right_node = np.array([row for row in data if row[feature_index] > split_threshold])  # slower
+        print(left_node)
+        print(right_node)
+        raise SystemExit
         return left_node, right_node
         # https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
 
-    def HyperSplit(self, data):
-         what
+    def HyperSplit(self, x, y, samples, features):
+        #data = np.concatenate((x, y), axis=1)
+        #print(x[:, 0].shape)
+        #print(x[:, 0][0].shape)
+        for idx in range(features):
+            x_values = x[:, idx]
+            thresholds = np.unique(x_values)
+            for threshold in thresholds:
+                self.nodeSplit(x, idx, threshold)
 
 
     def giniIndex(x):  # 0 to 0.5
@@ -131,5 +136,5 @@ class DecisionTreeClassifier:
     # IG(S, a) = H(S) - H(S|a), the second part is the cond probability. Parent node - comb entropy of childnodes
     # mutual information I(X;Y) = H(X) - H(X|Y) this is mutual dependence
 
-myTree = DecisionTreeClassifier(2, 2)
+myTree = DecisionTreeClassifier(max_depth=4, min_sample_split=2)
 myTree.fit(X_train, Y_train)
