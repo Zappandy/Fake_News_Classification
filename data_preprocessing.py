@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import collections
 from keras.preprocessing.text import text_to_word_sequence
+from sklearn.model_selection import train_test_split
 
 articles = pd.read_csv("all_datasets.csv")
 #articles = articles.loc[:, ~articles.columns.str.contains('^Unnamed')]  # remove weird index
@@ -11,7 +12,7 @@ total_articles = articles.shape[0]  # 44898
 max_len = max(articles["text"].map(len))  # len method works with list, 8375
 
 
-test_articles = articles.iloc[:5,:]
+test_articles = articles.iloc[:15,:]
 total_articles = test_articles.shape[0]  # 44898
 max_len = max(test_articles["text"].map(len))  # len method works with list, 8375
 
