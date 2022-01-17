@@ -19,15 +19,6 @@ class TreeNode:
         # if a decision has been made
         self.value = None
 
-    @property
-    def leafNode(self):
-        return self.value
-
-    @leafNode.setter
-    def leafNode(self, value):
-        if value:
-            self.value = value
-
 
 class DecisionTreeClassifier:
 
@@ -40,79 +31,76 @@ class DecisionTreeClassifier:
 
     def fit(self, x_train, y_train):
         #self.n_feats = X.shape[1] if not self.n_feats else min(self.n_feats, X.shape[1]) num_features
-        y_train = np.resize(y_train, (y_train.shape[0], 1))
-        data = np.concatenate((x_train, y_train), axis=1)  # concatenating training data to grow tree and split node data that includes the labels
-        self.root = self.branchBuilder(data, curr_depth=0)  # init as zero
+        #y_train = np.resize(y_train, (y_train.shape[0], 1))
+        self.root = self.branchBuilder(x_train, y_train, curr_depth=0)  # init as zero
 
 
-    def predict(self, x_train):
-        return np.array([self.treeTraversal(x, self.root) for x in x_train])
+    def predict(self, x_test):
+        return np.array([self.treeTraversal(x, self.root) for x in x_test])
 
 
     def treeTraversal(self, x, tree_node):
         if tree_node.value:
             return tree_node.value
+        print(tree_node.threshold)
 
-        print(tree_node.feature)
-        if x[tree_node.feature] < node.threshold:
-            return self.treeTraversal(x, tree_node.left)
-        return self.treeTraversal(x, tree_node.right)
+        if x[tree_node.feature] < tree_node.threshold:
+            return self.treeTraversal(x, tree_node.left_node)
+        return self.treeTraversal(x, tree_node.right_node)
 
-    def branchBuilder(self, data, curr_depth):  # init as zero
-        x = data[:, :-1]
-        y = data[:, -1]
+    def branchBuilder(self, x, y, curr_depth):  # init as zero
+        if len(x.shape) > 2:  # remove 1 dimensions from indexing
+            x = np.squeeze(x) 
+        #if len(x.shape) == 1:
+        #    x = np.resize(x, (x.shape[0], 1))
+        #    print("tito!!!")
         samples, features = x.shape
-        if curr_depth > self.max_depth or samples < self.min_sample_split:
-            leaf_node = TreeNode()
-            y = y.tolist()
-            leaf_node.value = max(y, key=y.count)  # returns mode
-            return TreeNode(leaf_node)
 
-        elif samples >= self.min_sample_split and curr_depth <= self.max_depth:
-            hyperparameters = self.HyperSplit(data, x, samples, features)
+        if samples >= self.min_sample_split and curr_depth <= self.max_depth:
+            hyperparameters = self.HyperSplit(x, y, samples, features)
             if hyperparameters["information_gain"] > 0:
-                left_branch = self.branchBuilder(hyperparameters["left_branch"], curr_depth + 1)
-                right_branch = self.branchBuilder(hyperparameters["right_branch"], curr_depth + 1)
-                decision_node = TreeNode(hyperparameters["feat_index"], hyperparameters["threshold"], right_branch, left_branch, hyperparameters["information_gain"])
-                return decision_node
+                left_idx, right_idx = self.nodeSplit(x[:, hyperparameters["feat_index"]], hyperparameters["threshold"])
 
-            if hyperparameters["information_gain"] == 0:
-                print("Pure node, each side corresponds to one class. No further splitting needed")
-        else:
-            raise Exception("Program did not enter the tree at all")
+                left_branch = self.branchBuilder(x[left_idx, :], y[left_idx], curr_depth + 1)
+                right_branch = self.branchBuilder(x[right_idx, :], y[right_idx], curr_depth + 1)
+                return TreeNode(hyperparameters["feat_index"], hyperparameters["threshold"], right_branch, left_branch, hyperparameters["information_gain"])
+        return self.leafBuilder(y)
 
-    def nodeSplit(self, data, _threshold):
-        left_indeces = np.argwhere(data[:, :-1] <= _threshold)
-        right_indeces = np.argwhere(data[:, :-1] > _threshold)
+    def leafBuilder(self, y):
+        leaf_node = TreeNode()
+        y = y.tolist()
+        leaf_node.value = max(y, key=y.count)  # returns mode
+        return TreeNode(leaf_node)
+
+
+    def nodeSplit(self, x, _threshold):
+        left_indeces = np.argwhere(x <= _threshold)
+        right_indeces = np.argwhere(x > _threshold)
         left_indeces = tuple(np.transpose(left_indeces))
         right_indeces = tuple(np.transpose(right_indeces))
-        left_node = data[left_indeces]
-        right_node = data[right_indeces]
-        parent = np.concatenate((left_node, right_node), axis=0)  # ignoring labels column
-        return left_node, right_node, parent
+        return left_indeces, right_indeces
         # https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
 
-    def HyperSplit(self, data, x, samples, features):
+    def HyperSplit(self, x, y, samples, features):
         info_gain = -1  # init with -1 because it can't be negative
         hyperparameters = {"information_gain": info_gain, "feat_index": 0, "threshold": None, "left_branch": None, "right_branch":None}
         for idx in range(features):
             x_values = x[:, idx]
             thresholds = np.unique(x_values)
             for threshold in thresholds:
-                left_node, right_node, parent_node = self.nodeSplit(data, threshold)
-                if bool(left_node.size) and bool(right_node.size):
-                    best_info_gain = self.InformationGainClassification(left_node, right_node, parent_node, "entropy")  # seems to do better with gini
-                    if best_info_gain > info_gain:
-                        hyperparameters["information_gain"] = best_info_gain
-                        hyperparameters["feat_index"] = idx
-                        hyperparameters["threshold"] = threshold
-                        hyperparameters["left_branch"] = left_node
-                        hyperparameters["right_branch"] = right_node
-                        info_gain = best_info_gain
-                        print(best_info_gain)
+                left_idx, right_idx = self.nodeSplit(x_values, threshold)
+                best_info_gain = self.InformationGainClassification(y, left_idx, right_idx, "entropy")  # seems to do better with gini
+                if best_info_gain > info_gain:
+                    hyperparameters["information_gain"] = best_info_gain
+                    hyperparameters["feat_index"] = idx
+                    hyperparameters["threshold"] = threshold
+                    #hyperparameters["left_branch"] = left_node
+                    #hyperparameters["right_branch"] = right_node
+                    info_gain = best_info_gain
+                    print(best_info_gain)
         return hyperparameters
 
-    def giniIndex(self, x):  # 0 to 0.5
+    def giniIndex(self, child_node):  # 0 to 0.5
         """
         criterion for calculating IG. IG is used with decision trees to split a
         node because we measure the impurity of a node. If a node has multiple
@@ -120,9 +108,9 @@ class DecisionTreeClassifier:
         loss function: 1 - sigma(prob_data)**2
         """
 
-        uniq_features = np.unique(data, return_counts=True, axis=0)[1]  # to get counts
-        x_prob = uniq_features / x.size  # counting each class per node split
-        return 1 - np.sum(x_prob**2)  # weighted gini index is for a particular split. I.e. gini index * (values of one side / divide by total between 2 sides)
+        uniq_features = np.unique(child_node, return_counts=True, axis=0)[1]  # to get counts
+        child_prob = uniq_features / child_node.size  # counting each class per node split
+        return 1 - np.sum(child_prob**2)  # weighted gini index is for a particular split. I.e. gini index * (values of one side / divide by total between 2 sides)
 
 
     def Entropy(self, child_node):  # feed the vectors to this. 0 to 1. only x?
@@ -146,7 +134,7 @@ class DecisionTreeClassifier:
 
 #In this way, entropy can be used as a calculation of the purity of a dataset, e.g.
 
-    def InformationGainClassification(self, left_child, right_child, parent, func):  # information gain is used with entropy. If it's used with the gini index, it's called something else
+    def InformationGainClassification(self, y, left_idx, right_idx, func):  # information gain is used with entropy. If it's used with the gini index, it's called something else
         # child vs parent nodes
         """
         information gain of a loss function
@@ -154,12 +142,18 @@ class DecisionTreeClassifier:
         mask --> split choice
         large IG means lower entropy
         """
+        if len(left_idx)== 0 or len(right_idx) == 0:  # pure nodes, no need to divide any futhe
+            return 0
+        left_node = y[left_idx]
+        right_node = y[right_idx]
+        #parent = np.concatenate((left_node, right_node), axis=0)  # ignoring labels column
+        parent =y
         if func == "entropy":
             func = self.Entropy
         else:
             func = self.giniIndex
-        left_inf_comp = left_child.size / parent.size * func(left_child)
-        right_inf_comp = right_child.size / parent.size * func(right_child)
+        left_inf_comp = left_node.size / parent.size * func(left_node)
+        right_inf_comp = right_node.size / parent.size * func(right_node)
         return func(parent) - (left_inf_comp + right_inf_comp)  # weighted values of features
 
 myTree = DecisionTreeClassifier(max_depth=2, min_sample_split=2)
