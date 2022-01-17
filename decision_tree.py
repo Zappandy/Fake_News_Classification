@@ -4,13 +4,13 @@ from data_preprocessing import *
 
 class TreeNode:
 
-    def __init__(self, feature=None, threshold=None, right_node=None, left_node=None, min_info_gain=None):  # feature_index
+    def __init__(self, feature=0, threshold=0, right_node=None, left_node=None, min_info_gain=-1):  # feature_index
         """
         Initializing a decision node and leaf node
         """
         self.feature = feature
         self.threshold = threshold
-        self.righ_node = right_node
+        self.right_node = right_node
         self.left_node = left_node
         self.min_info_gain = min_info_gain
         # threshold is important for splitting in the decision tree itself
@@ -42,31 +42,35 @@ class DecisionTreeClassifier:
     def treeTraversal(self, x, tree_node):
         if tree_node.value:
             return tree_node.value
-        print(tree_node.threshold)
+        #print(tree_node.threshold)
 
-        if x[tree_node.feature] < tree_node.threshold:
+        if x[tree_node.feature] <= tree_node.threshold:
             return self.treeTraversal(x, tree_node.left_node)
         return self.treeTraversal(x, tree_node.right_node)
 
     def branchBuilder(self, x, y, curr_depth):  # init as zero
+        node = TreeNode()
         if len(x.shape) > 2:  # remove 1 dimensions from indexing
             x = np.squeeze(x) 
         #if len(x.shape) == 1:
         #    x = np.resize(x, (x.shape[0], 1))
         #    print("tito!!!")
-        samples, features = x.shape
+        samples = x.shape[0]
+        features = x.shape[1] if len(x.shape) > 1 else None
+        print(x.shape[0], x.shape[1])
 
-        if samples >= self.min_sample_split and curr_depth <= self.max_depth:
+        if samples >= self.min_sample_split and curr_depth <= self.max_depth and features:  # pointless to compute if no unique target values
             hyperparameters = self.HyperSplit(x, y, samples, features)
-            if hyperparameters["information_gain"] > 0:
+            if hyperparameters["information_gain"] >= 0:
                 left_idx, right_idx = self.nodeSplit(x[:, hyperparameters["feat_index"]], hyperparameters["threshold"])
 
                 left_branch = self.branchBuilder(x[left_idx, :], y[left_idx], curr_depth + 1)
                 right_branch = self.branchBuilder(x[right_idx, :], y[right_idx], curr_depth + 1)
-                return TreeNode(hyperparameters["feat_index"], hyperparameters["threshold"], right_branch, left_branch, hyperparameters["information_gain"])
-        return self.leafBuilder(y)
+                node = TreeNode(hyperparameters["feat_index"], hyperparameters["threshold"], right_branch, left_branch, hyperparameters["information_gain"])
+                return node
+        return self.leafBuilder(y, node)
 
-    def leafBuilder(self, y):
+    def leafBuilder(self, y, node):
         leaf_node = TreeNode()
         y = y.tolist()
         leaf_node.value = max(y, key=y.count)  # returns mode
@@ -76,6 +80,9 @@ class DecisionTreeClassifier:
     def nodeSplit(self, x, _threshold):
         left_indeces = np.argwhere(x <= _threshold)
         right_indeces = np.argwhere(x > _threshold)
+        print(np.transpose(left_indeces.shape))
+        print(np.transpose(right_indeces.shape))
+        raise SystemExit
         left_indeces = tuple(np.transpose(left_indeces))
         right_indeces = tuple(np.transpose(right_indeces))
         return left_indeces, right_indeces
@@ -97,7 +104,6 @@ class DecisionTreeClassifier:
                     #hyperparameters["left_branch"] = left_node
                     #hyperparameters["right_branch"] = right_node
                     info_gain = best_info_gain
-                    print(best_info_gain)
         return hyperparameters
 
     def giniIndex(self, child_node):  # 0 to 0.5
@@ -158,5 +164,5 @@ class DecisionTreeClassifier:
 
 myTree = DecisionTreeClassifier(max_depth=2, min_sample_split=2)
 myTree.fit(X_train, Y_train)
-prediction = myTree.predict(X_test)
+#prediction = myTree.predict(X_test)
 
